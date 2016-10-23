@@ -11,16 +11,17 @@
 #include <math.h>
 #include <algorithm>
 using namespace std;
-
+// Use 1024 (lower 10
 void nBitCounter(int, int, int, int[][2]);
+int GetpcLowerTenBits(string);
 
 int main() {
-    int globPredArray[4][2]; // Stores prediction and pred_strength from each n-bit counter 
+    int globPredArray[4][2]; // Used in nBitCounter. Stores prediction and pred_strength from each n-bit counter 
     const int GHRsize = 2;
     int GHR[GHRsize];
-    int globalIndex = 0, result = 0;
+    int globalIndex = 0, execution = 0;
     bool globalPrediction = 0, localPrediction = 0, Tournament_prediction = 0;  //where 0-Not Taken & 0-Taken
-    string instr_info[4], dummy;
+    string instr_info[4], pc, dummy;
     ifstream reader;
     reader.open("smalltrace.txt");     
 
@@ -43,19 +44,22 @@ int main() {
             reader >> instr_info[i];
             if(i<3) reader>>dummy;    
         }
-        result = atoi(instr_info[3].c_str()); //recall, atoi doesn't work on strings
     
     // check if it's a Branch instruction
     if (instr_info[2] == "B") {
         // reset params
         globalIndex = 0;
 
-        // Save history (Instr. and Taken/Not Taken info)
+        // Grab and save history (Instr PC and execution info)
+        execution = atoi(instr_info[3].c_str()); //Get Execution result. Recall, atoi doesn't work on strings
+        pc = instr_info[1];
+
+        // Save history 
         // Implement shift-left register
         for (int j=1; j<GHRsize; j++) {
             GHR[j-1] = GHR[j]; 
         }
-        GHR[GHRsize-1] = result; 
+        GHR[GHRsize-1] = execution; 
 
 
         // Global Predictor
@@ -68,7 +72,7 @@ int main() {
         globalPrediction = globPredArray[globalIndex][0];
 
         // Update globPredArray by implementing n=2 bit counter
-        nBitCounter(2, result, globalIndex, globPredArray);
+        nBitCounter(2, execution, globalIndex, globPredArray);
 
 
         // Debug
@@ -80,11 +84,22 @@ int main() {
 
         // Local Predictor
         
-        // Save accuracy results 
+        // Save accuracy executions 
         }
     }
 
     return 0;
+}
+
+
+int GetpcLowerTenBits(string pc){
+    int lowerTenBits = 0, pcLength = pc.length();
+
+    for (int i=0; i<pcLength; i++) {
+        lowerTenBits += pc[pcLength-i-1] * pow(10, i); 
+    }
+
+    return lowerTenBits; 
 }
 
 void nBitCounter(int n, int newvalue, int globalIndex, int globPredArray[][2]) {
