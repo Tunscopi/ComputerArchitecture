@@ -1,11 +1,18 @@
 #include <iostream>
+#include <sstream>
+#include <bitset>
+#include <string>
+
 using namespace std;
 
-int main() {
-
-int x = 0xd4fc0;
-cout << x << endl;
-
-
-    return 0;
+int main()
+{
+    string s = "0xA";
+    stringstream ss;
+    ss << hex << s;
+    unsigned n;
+    ss >> n;
+    bitset<32> b(n);
+    // outputs "00000000000000000000000000001010"
+    cout << b.to_string() << endl;
 }
