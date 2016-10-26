@@ -16,19 +16,24 @@
 #include <algorithm>
 using namespace std;
 
+// Global variables
+const int GHRsize = 2, entries = 50;
+int GHR[2];
+int predictorArray[1][2], globPredArray[4][2]; // predictorArray: Selected predictor & strength. globPredArray: Used in nBitCounter. Stores prediction and pred_strength from each n-bit counter 
+
 // Helper functions
 void nBitCounter(int, int, int, int[][2]);
-string GetpcLowerTenBits(string);
+long long GetpcLowerTenBits(string);
 int saturatingCounter(int, int, int[][2]);
+int globalPred(int, int, int[][2]);
+int localPred(int, int);
+
 
 int main() {
     // Set-up
-    int predictorArray[1][2], globPredArray[4][2]; // predictorArray: Selected predictor & strength. globPredArray: Used in nBitCounter. Stores prediction and pred_strength from each n-bit counter 
-    const int GHRsize = 2, entries = 50;
-    int GHR[GHRsize]; 
-    string predictorSelector[entries][2], pcLowerTenBits;
-    int curr_prediction = 0, globalIndex = 0, execution = 0, curr_index = 0;
-    bool isfound = false, globalPrediction = 0, localPrediction = 0;  //where 0-Not Taken & 1-Taken
+    string predictorSelector[entries][2];
+    int curr_prediction = 0, globalIndex = 0, execution = 0, curr_index = 0, pcLowerTenBits;
+    bool isfound = false, tournament_prediction = 0, globalPrediction = 0, localPrediction = 0;  //where 0-Not Taken & 1-Taken
     string instr_info[4], pc, dummy, selectedPredictor = "1";
     ifstream reader;
     reader.open("smalltrace.txt");     
@@ -50,9 +55,9 @@ int main() {
     predictorArray[0][1] = 2; // Initialize selected predictor strength to 2; i.e 2 misses before switch 
 
 
-
-    // Parse input trace file
+    // Core functionality
     while (!reader.eof()) {
+        // Parse input trace file
         for (int i=0; i<4; i++){
             reader >> instr_info[i];
             if(i<3) reader>>dummy;    
@@ -63,43 +68,19 @@ int main() {
             // reset params
             globalIndex = 0;
 
-            // Grab and save history (Instr PC and execution info)
+            // Grab info (Instr PC and execution info)
             execution = atoi(instr_info[3].c_str()); //Get Execution result. Recall, atoi doesn't work on strings
             pc = instr_info[1];
-
-            // Save history if it doesn't already exist 
             pcLowerTenBits = GetpcLowerTenBits(pc);
+            //cout << pcLowerTenBits << endl; 
 
+            /* Update Predictors 
+            globalPrediction = globalPred(execution, globalIndex, globPredArray);
+            localPrediction = localPred(execution, entries);
 
-            // Select Predictor
-         /* if (selectedPredictor == 1) { // Global Predictor (2,2) correlating predictor
-             
-             Implement shift-left register to track last 2 branches
-                for (int j=1; j<GHRsize; j++) 
-                     GHR[j-1] = GHR[j]; 
-                GHR[GHRsize-1] = execution; 
-
-                // Compute glob. Pred Index
-                for (int i=GHRsize-1; i>=0; i--) 
-                    globalIndex += GHR[i]* pow(2,i); 
-
-                // Access PHR (globPredArray), global prediction value
-                globalPrediction = globPredArray[globalIndex][0];
-
-                // Update globPredArray by implementing n=2 bit counter
-                nBitCounter(2, execution, globalIndex, globPredArray);
-                
-            } else { // Local Predictor 
-
-            } 
-            
-
-            // Update Tournament prediction results & selector
-            if (predictorArray[0][1] == 1) curr_prediction = globalPrediction;
-            else curr_prediction = localPrediction; 
+            (selectedPredictor == 1) ? tournament_prediction = globalPrediction : tournament_predictor = localPrediction;
 
             selectedPredictor = saturatingCounter(execution, curr_prediction, predictorArray);                
-            */
 
             // Determine which predictor to use with lower 10 bits
             for (int i=0; i<curr_index; i++) { // Search for record
@@ -115,6 +96,7 @@ int main() {
                 curr_index++;
             }
             isfound = false;
+            */
         }
     }
 
@@ -122,17 +104,34 @@ int main() {
     }
 
 
-string GetpcLowerTenBits(string pc){
-    string lowerTenBits;
 
-    pc = "0x" + pc; //.substr(2,5); //This will sufficiently contain last 10 bits
-    stringstream ss;
-    ss << hex << pc;
-    unsigned n;
-    ss >> n;
 
-    return to_string(n);
+int globalPred(int execution, int globalIndex, int globPredArray[][2]) {
+       // Access PHR (globPredArray), global prediction value
+       int globalPrediction = globPredArray[globalIndex][0];
+
+       //Implement shift-left register to track last 2 branches
+       for (int j=1; j<GHRsize; j++) 
+            GHR[j-1] = GHR[j]; 
+       GHR[GHRsize-1] = execution; 
+
+       // Compute glob. Pred Index
+       for (int i=GHRsize-1; i>=0; i--) 
+           globalIndex += GHR[i]*pow(2,i); 
+
+       // Update globPredArray by implementing n=2 bit counter
+       nBitCounter(2, execution, globalIndex, globPredArray);
+
+    return globalPrediction;
 }
+
+
+int localPred(int execution, int entries) {
+    int localPrediction = execution;
+
+    return localPrediction;
+}
+
 
 int saturatingCounter (int newvalue, int selPredictorValue, int predictorArray[][2]) {
     int selPredictor = predictorArray[0][0], strength = predictorArray[0][1];
@@ -152,6 +151,7 @@ int saturatingCounter (int newvalue, int selPredictorValue, int predictorArray[]
     return selPredictor;
 }
 
+
 void nBitCounter(int n, int newvalue, int globalIndex, int globPredArray[][2]) {
     int nBitPrediction = globPredArray[globalIndex][0], pred_strength = globPredArray[globalIndex][1]; // For better readability
 
@@ -167,4 +167,23 @@ void nBitCounter(int n, int newvalue, int globalIndex, int globPredArray[][2]) {
 
     globPredArray[globalIndex][0] = nBitPrediction;
     globPredArray[globalIndex][1] = pred_strength;
+}
+
+
+long long GetpcLowerTenBits(string pc){
+    long long lowerTenBits;
+    unsigned n;
+
+    pc = "0x" + pc; // This will sufficiently contain last 10 bits
+    stringstream ss;
+    ss << hex << pc;
+    ss >> n;
+    bitset<10> binary_val(n);
+    bitset<10> mask(0x3FF);
+    binary_val = binary_val & mask; // Get rid of still present bits after desired 10
+
+    int bin_int = (int)(binary_val.to_ulong());
+    lowerTenBits = stol(to_string(bin_int));
+
+    return lowerTenBits;
 }
