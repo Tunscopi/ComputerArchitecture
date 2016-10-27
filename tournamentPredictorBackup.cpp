@@ -66,6 +66,8 @@ int main() {
 
         // check if it's a Branch instruction
         if (instr_info[2] == "B") {
+            // reset params
+            globalIndex = 0;
 
             // Grab info (Instr PC and execution info)
             execution = atoi(instr_info[3].c_str()); //Get Execution result. Recall, atoi doesn't work on strings
