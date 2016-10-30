@@ -1,2 +1,2 @@
 # ComputerArchitecture
-Solution to projects/work from Computer Architecture college class
+Solution to project from Computer Architecture class
