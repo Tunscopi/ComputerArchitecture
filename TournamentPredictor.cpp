@@ -194,9 +194,6 @@ int saturatingCounter (int execution, int curr_prediction) {
     return selPredictor;
 }
 
-
-
-
 long long GetpcLowerTenBits(string pc){
     long long lowerTenBits;
     unsigned n;
