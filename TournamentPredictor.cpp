@@ -42,7 +42,7 @@ int main() {
     ifstream reader;
     reader.open("smalltrace.txt");     
 
-    // Initialize Data Arrays to zeros
+    // Initialize Data Arrays
     for (int i=0; i<GHRsize; i++)
        GHR[i] = 0;
 
