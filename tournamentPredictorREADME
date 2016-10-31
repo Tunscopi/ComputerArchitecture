@@ -20,4 +20,5 @@ Reasoning: It is possible, in the trace program given, there was a strong link b
     Parameters used:
 	Using an n bit counter of 1 i.e changing predictor (saturating counter after 1 wrong prediction) and changing prediction (in both local & global predictors after 1 wrong prediction) with all other default parameters fixed.
 
-Reasoning:
+Reasoning: It is possible, in the trace program given, there was a quicker "recovery" of the predictors to the correct value. i.e they got to the right prediction after missing the previous. Also, this implies, there was a well defined branch direction. 
+This is because, the lower misprediction rate here suggests that, generally, a single wrong prediction was not a "fluke", but instead the execution was really changing after a misprediction. Hence, the 1 bit counter performed better branch prediction accuracy. 
