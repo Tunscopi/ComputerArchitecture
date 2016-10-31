@@ -17,22 +17,25 @@
 using namespace std;
 
 // Global variables
-const int GHRsize = 2, entries = 1024, localHistoryDepth = 10, lastmBranchesUsed = 2, globPredwidth = 4; 
-int GHR[GHRsize];
-int pcLowerTenBits, globalIndex = 0, predictorArray[1][2], globPredArray[entries][globPredwidth], globPredStrengths[entries][globPredwidth]; // predictorArray: Selected predictor & strength. globPredArray: Used in nBitCounter. Stores prediction and pred_strength from each n-bit counter 
+// -------- CONTROL PARAMETERS (1) -----------
+const int entries = 1024, localHistoryDepth = 10, lastmBranchesUsed = 2, globPredwidth = 4; 
+
+const int GHRsize = lastmBranchesUsed; 
+int GHR[GHRsize], pcLowerTenBits, globalIndex = 0, predictorArray[1][2], globPredArray[entries][globPredwidth], globPredStrengths[entries][globPredwidth]; // globPredArray: Used in nBitCounter, stores prediction and globPredStrengths stores corresponding pred_strength from each n-bit counter 
 int localIndex = 0, levelOne[entries][localHistoryDepth], levelTwo[entries][1], levelTwoStrengths[entries][1];
 
 // Helper functions
+int globalPred(int, int);
+int localPred(int, int);
 void nBitCounter(int, int, bool);
+int saturatingCounter(int, int, int);
 long long GetpcLowerTenBits(string);
-int saturatingCounter(int, int);
-int globalPred(int);
-int localPred(int);
+
 
 
 int main() {
-    // -------- CONTROL PARAMETERS ----------
-    int currPredictor = 1; //Initial predictor (1 - Global Predictor)
+    // -------- CONTROL PARAMETERS (2) ----------
+    int currPredictor = 1, no_CounterBits = 2; //Initial predictor (1 - Global Predictor), no_CounterBits- no. of wrong predictions before nbit counter/saturating counter switch
 
     // Set-up variables
     int execution = 0;
@@ -48,17 +51,17 @@ int main() {
 
     for (int i=0; i<entries; i++) { 
         levelTwo[i][0] = 0; 
-        levelTwoStrengths[i][0] = 2; 
+        levelTwoStrengths[i][0] = no_CounterBits; 
 
         for (int j=0; j<globPredwidth; j++) {  
-            globPredStrengths[i][j] = 2; // Initialize prediction  strengths to strongly taken/strongly not taken
+            globPredStrengths[i][j] = no_CounterBits; // Initialize prediction  strengths to strongly taken/strongly not taken
             globPredArray[i][j] = 0; // Initialize predictions to all Not taken
         }
         for (int k=0; k<localHistoryDepth; k++) 
             levelOne[i][k] = 0;
     }
-    predictorArray[0][0] = 1; // Initialize selected predictor to 1 (Global Predictor)
-    predictorArray[0][1] = 2; // Initialize selected predictor strength to 2; i.e 2 misses before switch 
+    predictorArray[0][0] = currPredictor; // Initialize selected predictor to 1 (Global Predictor)
+    predictorArray[0][1] = no_CounterBits; // Initialize selected predictor strength to 2; i.e 2 misses before switch 
 
 
 
@@ -81,18 +84,18 @@ int main() {
             pcLowerTenBits = GetpcLowerTenBits(pc);
 
             // Get result from local & global predictors, then update them 
-            cout << "Branch: " << pcLowerTenBits << endl;
-            globalPrediction = globalPred(execution);
-            localPrediction = localPred(execution);
+            //cout << "Branch: " << pcLowerTenBits << endl;
+            globalPrediction = globalPred(execution, no_CounterBits);
+            localPrediction = localPred(execution, no_CounterBits);
 
 
-            cout << "Curr Predictor: " << currPredictor << endl;
-            cout << "Exe: " << execution << " Pred: " << globalPrediction << " " << localPrediction << endl;
-            cout << endl;
+            //cout << "Curr Predictor: " << currPredictor << endl;
+            //cout << "Exe: " << execution << " Preds: " << globalPrediction << " " << localPrediction << endl;
+            //cout << endl;
 
             // Use current selected predictor, then update current predictor if necessary
             (currPredictor == 1) ? tournament_prediction = globalPrediction : tournament_prediction = localPrediction;
-            currPredictor = saturatingCounter(execution, tournament_prediction);                
+            currPredictor = saturatingCounter(no_CounterBits, execution, tournament_prediction);                
 
             // Determine if misprediction
             if (tournament_prediction != execution) 
@@ -105,7 +108,7 @@ int main() {
     return 0;
 }
 
-int localPred(int execution) {
+int localPred(int execution, int no_CounterBits) {
     int localPrediction = levelTwo[localIndex][0];
 
     //Implement shift-left register to track last 10 executions of particular branch
@@ -119,7 +122,7 @@ int localPred(int execution) {
         localIndex += levelOne[pcLowerTenBits][i]*pow(2,i); 
 
     // Update levelTwoArray and levelTwoStrengths
-    nBitCounter(2, execution, false);
+    nBitCounter(no_CounterBits, execution, false);
 
     return localPrediction;
 }
@@ -135,14 +138,12 @@ void nBitCounter(int n, int execution, bool isGlobalPredictor) {
 
     if (execution == nBitPrediction){
         if(pred_strength < n) pred_strength++;    
-        //cout << "Correct pred! " << nBitPrediction << " " << pred_strength << endl;
     } else{
         pred_strength--;
         if (pred_strength == 0) {
             nBitPrediction = execution;
             pred_strength = n;
         }
-        //cout << "Wrong, penalty! " << nBitPrediction << " " << pred_strength << endl;
     }
 
 
@@ -152,7 +153,7 @@ void nBitCounter(int n, int execution, bool isGlobalPredictor) {
         levelTwo[localIndex][0] = nBitPrediction, levelTwoStrengths[localIndex][0] = pred_strength;
 }
 
-int globalPred(int execution) { 
+int globalPred(int execution, int no_CounterBits) { 
        // Access PHR (globPredArray), global prediction value
        int globalPrediction = globPredArray[pcLowerTenBits][globalIndex];
 
@@ -167,24 +168,22 @@ int globalPred(int execution) {
            globalIndex += GHR[i]*pow(2,i); 
 
        // Update globPredArray by implementing n=2 bit counter
-       nBitCounter(2, execution, true);
+       nBitCounter(no_CounterBits, execution, true);
 
     return globalPrediction;
 }
 
-int saturatingCounter (int execution, int curr_prediction) {
+int saturatingCounter (int n, int execution, int curr_prediction) {
     int selPredictor = predictorArray[0][0], strength = predictorArray[0][1];
 
     if (execution == curr_prediction) {
-        //cout << "correct!" << endl;
-        if (strength < 2) strength++;
+        if (strength < n) strength++;
     } else { // Consider other predictor
-        //cout << "wrong!" << endl;
         strength--;
         if (strength == 0) {
             if (selPredictor == 1) selPredictor = 2;
             else selPredictor = 1;
-            strength = 2;
+            strength = n;
         }
     }
     //cout << strength  << endl << endl;
