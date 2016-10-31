@@ -84,14 +84,8 @@ int main() {
             pcLowerTenBits = GetpcLowerTenBits(pc);
 
             // Get result from local & global predictors, then update them 
-            //cout << "Branch: " << pcLowerTenBits << endl;
             globalPrediction = globalPred(execution, no_CounterBits);
             localPrediction = localPred(execution, no_CounterBits);
-
-
-            //cout << "Curr Predictor: " << currPredictor << endl;
-            //cout << "Exe: " << execution << " Preds: " << globalPrediction << " " << localPrediction << endl;
-            //cout << endl;
 
             // Use current selected predictor, then update current predictor if necessary
             (currPredictor == 1) ? tournament_prediction = globalPrediction : tournament_prediction = localPrediction;
@@ -197,7 +191,7 @@ long long GetpcLowerTenBits(string pc){
     long long lowerTenBits;
     unsigned n;
 
-    pc = "0x" + pc; // This will sufficiently contain last 10 bits
+    pc = "0x" + pc; 
     stringstream ss;
     ss << hex << pc;
     ss >> n;
