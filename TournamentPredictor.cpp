@@ -35,7 +35,7 @@ long long GetpcLowerTenBits(string);
 
 int main() {
     // -------- CONTROL PARAMETERS (2) ----------
-    int currPredictor = 1, no_CounterBits = 2; //Initial predictor (1 - Global Predictor), no_CounterBits- no. of wrong predictions before nbit counter/saturating counter switch
+    int currPredictor = 1, no_CounterBits = 3; //Initial predictor (1 - Global Predictor), no_CounterBits- no. of wrong predictions before nbit counter/saturating counter switch
 
     // Set-up variables
     int execution = 0;
@@ -43,7 +43,7 @@ int main() {
     bool tournament_prediction = 0, globalPrediction = 0, localPrediction = 0;  //where 0-Not Taken & 1-Taken
     string instr_info[4], pc, dummy; 
     ifstream reader;
-    reader.open("smalltrace.txt");     
+    reader.open("largetrace.txt");     
 
     // Initialize Data Arrays
     for (int i=0; i<GHRsize; i++)
