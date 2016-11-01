@@ -22,7 +22,7 @@ const int entries = 1024, localHistoryDepth = 10, lastmBranchesUsed = 2, globPre
 
 const int GHRsize = lastmBranchesUsed; 
 int GHR[GHRsize], pcLowerTenBits, globalIndex = 0, predictorArray[1][2], globPredArray[entries][globPredwidth], globPredStrengths[entries][globPredwidth]; // globPredArray: Used in nBitCounter, stores prediction and globPredStrengths stores corresponding pred_strength from each n-bit counter 
-int localIndex = 0, levelOne[entries][localHistoryDepth], levelTwo[entries][1], levelTwoStrengths[entries][1];
+int localIndex = 0, levelOne[entries][localHistoryDepth], levelTwo[entries][entries], levelTwoStrengths[entries][entries];
 
 // Helper functions
 int globalPred(int, int);
@@ -35,7 +35,7 @@ long long GetpcLowerTenBits(string);
 
 int main() {
     // -------- CONTROL PARAMETERS (2) ----------
-    int currPredictor = 1, no_CounterBits = 2; //Initial predictor (1 - Global Predictor), no_CounterBits- no. of wrong predictions before nbit counter/saturating counter switch
+    int currPredictor = 2, no_CounterBits = 2, no_SaturatingCounterBits = 2; //Initial predictor (1 - Global Predictor), no_CounterBits- no. of wrong predictions before nbit counter/saturating counter switch
 
     // Set-up variables
     int execution = 0;
@@ -50,8 +50,6 @@ int main() {
        GHR[i] = 0;
 
     for (int i=0; i<entries; i++) { 
-        levelTwo[i][0] = 0; 
-        levelTwoStrengths[i][0] = no_CounterBits; 
 
         for (int j=0; j<globPredwidth; j++) {  
             globPredStrengths[i][j] = no_CounterBits; // Initialize prediction  strengths to strongly taken/strongly not taken
@@ -59,9 +57,13 @@ int main() {
         }
         for (int k=0; k<localHistoryDepth; k++) 
             levelOne[i][k] = 0;
+        for (int l=0; l<entries; l++) {
+           levelTwo[i][l] = 0; 
+           levelTwoStrengths[i][l] = no_CounterBits; 
+        }
     }
     predictorArray[0][0] = currPredictor; // Initialize selected predictor to 1 (Global Predictor)
-    predictorArray[0][1] = no_CounterBits; // Initialize selected predictor strength to 2; i.e 2 misses before switch 
+    predictorArray[0][1] = no_SaturatingCounterBits; // Initialize selected predictor strength to 2; i.e 2 misses before switch 
 
 
 
@@ -89,7 +91,7 @@ int main() {
 
             // Use current selected predictor, then update current predictor if necessary
             (currPredictor == 1) ? tournament_prediction = globalPrediction : tournament_prediction = localPrediction;
-            currPredictor = saturatingCounter(no_CounterBits, execution, tournament_prediction);                
+            currPredictor = saturatingCounter(no_SaturatingCounterBits, execution, tournament_prediction);                
 
             // Determine if misprediction
             if (tournament_prediction != execution) 
@@ -103,7 +105,7 @@ int main() {
 }
 
 int localPred(int execution, int no_CounterBits) {
-    int localPrediction = levelTwo[localIndex][0];
+    int localPrediction = levelTwo[pcLowerTenBits][localIndex];
 
     //Implement shift-left register to track last 10 executions of particular branch
     for (int j=1; j<localHistoryDepth; j++) 
@@ -127,7 +129,7 @@ void nBitCounter(int n, int execution, bool isGlobalPredictor) {
     if (isGlobalPredictor) 
          nBitPrediction = globPredArray[pcLowerTenBits][globalIndex], pred_strength = globPredStrengths[pcLowerTenBits][globalIndex]; // For better readability
     else
-         nBitPrediction = levelTwo[localIndex][0], pred_strength = levelTwoStrengths[localIndex][0]; // For better readability
+         nBitPrediction = levelTwo[pcLowerTenBits][localIndex], pred_strength = levelTwoStrengths[pcLowerTenBits][localIndex]; // For better readability
 
 
     if (execution == nBitPrediction){
@@ -144,7 +146,7 @@ void nBitCounter(int n, int execution, bool isGlobalPredictor) {
     if (isGlobalPredictor) 
         globPredArray[pcLowerTenBits][globalIndex] = nBitPrediction, globPredStrengths[pcLowerTenBits][globalIndex] = pred_strength;
     else
-        levelTwo[localIndex][0] = nBitPrediction, levelTwoStrengths[localIndex][0] = pred_strength;
+        levelTwo[pcLowerTenBits][localIndex] = nBitPrediction, levelTwoStrengths[pcLowerTenBits][localIndex] = pred_strength;
 }
 
 int globalPred(int execution, int no_CounterBits) { 
