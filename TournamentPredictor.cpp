@@ -35,7 +35,7 @@ long long GetpcLowerTenBits(string);
 
 int main() {
     // -------- CONTROL PARAMETERS (2) ----------
-    int currPredictor = 1, no_CounterBits = 3; //Initial predictor (1 - Global Predictor), no_CounterBits- no. of wrong predictions before nbit counter/saturating counter switch
+    int currPredictor = 1, no_CounterBits = 2; //Initial predictor (1 - Global Predictor), no_CounterBits- no. of wrong predictions before nbit counter/saturating counter switch
 
     // Set-up variables
     int execution = 0;

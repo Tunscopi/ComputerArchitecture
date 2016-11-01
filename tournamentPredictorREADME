@@ -1,6 +1,8 @@
 # A) Instructions to Compile and Execute tournamentPredictor.cpp
--	l46 (line 46): Enter trace file (to be in same directory as code) here
+-       Unzipped AyotundeProject.zip file should contain TournamentPredictor.cpp & tournamentPredictorREADME 
+-       l46 (line 46): Enter trace file (to be in same directory as code) here
 -	Code prints out final answer X in form “Misprediction rate: X%
+-       The TournamentPredictor.cpp file is set to the default project required parameters
 
 
 
@@ -10,15 +12,15 @@
 Default parameters gave misprediction rate of 20.1428% 
 
 1. Misprediction rate: 19.0364%
-    Parameters used:
+   Parameters used:
 	Using 1 branch for global predictor as opposed to last 2 branches. Hence, a (1,2) correlating predictor for the global predictor produced higher accuracy branch prediction over the (2,2) predictor. with all other default parameters fixed.
 
-Reasoning: It is possible, in the trace program given, there was a strong link between successive branches that was even stronger than the connection between a branch and the previous 2 or more. Hence, the better branch prediction accuracy.
+Reasoning: It is possible, in the trace program given, there was a strong link between successive branches that was even stronger than the connection between a branch and the previous 2 or more (looking at a global scale). Hence, the better branch prediction accuracy coming primarily from the global predictor.
 
 
 2. Misprediction rate: 15.9399% 
-    Parameters used:
-	Using an n bit counter of 1 i.e changing predictor (saturating counter after 1 wrong prediction) and changing prediction (in both local & global predictors after 1 wrong prediction) with all other default parameters fixed.
+   Parameters used:
+	Using an n bit counter of 1 i.e changing the selected predictor (saturating counter updates after 1 wrong prediction) and changing prediction (in both local & global predictors after 1 wrong prediction) with all other default parameters fixed.
 
 Reasoning: It is possible, in the trace program given, there was a quicker "recovery" of the predictors to the correct value. i.e they got to the right prediction after missing the previous. Also, this implies, there was a well defined branch direction. 
-This is because, the lower misprediction rate here suggests that, generally, a single wrong prediction was not a "fluke", but instead the execution was really changing after a misprediction. Hence, the 1 bit counter performed better branch prediction accuracy. 
+This is because, the lower misprediction rate here suggests that, generally, a single wrong prediction was not a "fluke", but instead the execution was really flipping after a single misprediction. Hence, the 1 bit counter performed better branch prediction accuracy. 
