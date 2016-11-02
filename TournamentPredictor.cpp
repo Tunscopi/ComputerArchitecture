@@ -39,11 +39,12 @@ int main() {
 
     // Set-up variables
     int execution = 0;
+    int count_val = 0;
     float no_branches = 0.0, mispred_rate = 0.0, mispred_count = 0.0;
     bool tournament_prediction = 0, globalPrediction = 0, localPrediction = 0;  //where 0-Not Taken & 1-Taken
     string instr_info[4], pc, dummy; 
     ifstream reader;
-    reader.open("largetrace.txt");     
+    reader.open("smalltrace.txt");     
 
     // Initialize Data Arrays
     for (int i=0; i<GHRsize; i++)
@@ -85,6 +86,8 @@ int main() {
             pcLowerTenBits = GetpcLowerTenBits(pc);
 
             // Get result from local & global predictors, then update them 
+            count_val++;
+            cout << count_val << " "; 
             globalPrediction = globalPred(execution, no_CounterBits);
             localPrediction = localPred(execution, no_CounterBits);
 

@@ -6,7 +6,7 @@ int main() {
 string instr_info[4];
 string dummy;
 ifstream reader;
-reader.open("largetrace.txt");
+reader.open("smalltrace.txt");
 
 while(!reader.eof()) {
     for (int i=0; i<4; i++){
