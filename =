@@ -39,6 +39,7 @@ int main() {
 
     // Set-up variables
     int execution = 0;
+    int count_val = 0;
     float no_branches = 0.0, mispred_rate = 0.0, mispred_count = 0.0;
     bool tournament_prediction = 0, globalPrediction = 0, localPrediction = 0;  //where 0-Not Taken & 1-Taken
     string instr_info[4], pc, dummy; 
@@ -48,6 +49,7 @@ int main() {
     // Initialize Data Arrays
     for (int i=0; i<GHRsize; i++)
        GHR[i] = 0;
+
     for (int i=0; i<entries; i++) { 
         for (int j=0; j<globPredwidth; j++) {  
             globPredStrengths[i][j] = no_CounterBits; // Initialize prediction  strengths to strongly taken/strongly not taken
@@ -104,21 +106,20 @@ int main() {
 int localPred(int execution, int no_CounterBits) {
     int localPrediction = levelTwo[pcLowerTenBits][localIndex];
 
-    for (int i=0; i<localHistoryDepth; i++)
-        cout << levelOne[pcLowerTenBits][i] << " ";
-    cout << "   " << localIndex << endl;
-
     //Implement shift-left register to track last 10 executions of particular branch
     for (int j=1; j<localHistoryDepth; j++) 
         levelOne[pcLowerTenBits][j-1] = levelOne[pcLowerTenBits][j]; 
     levelOne[pcLowerTenBits][localHistoryDepth-1] = execution; 
-    
+
+    for (int i=0; i<localHistoryDepth; i++) 
+        cout << levelOne[pcLowerTenBits][i] << " ";
 
     // Compute local Pred Index
     localIndex = 0;
-    for (int i=localHistoryDepth-1; i>=0; i--) 
-        localIndex += levelOne[pcLowerTenBits][i]*pow(2,localHistoryDepth-(i+1)); 
-    
+    for (int i=localHistoryDepth-1; i>=0; i--){ 
+        localIndex += levelOne[pcLowerTenBits][i]*pow(2,i); 
+    }
+    //cout << endl << localIndex << endl << endl;
     
     // Update levelTwoArray and levelTwoStrengths
     nBitCounter(no_CounterBits, execution, false);
@@ -164,7 +165,7 @@ int globalPred(int execution, int no_CounterBits) {
        // Compute glob. Pred Index
        globalIndex = 0;
        for (int i=GHRsize-1; i>=0; i--) 
-           globalIndex += GHR[i]*pow(2,GHRsize-(i+1)); 
+           globalIndex += GHR[i]*pow(2,i); 
 
        // Update globPredArray by implementing n=2 bit counter
        nBitCounter(no_CounterBits, execution, true);
