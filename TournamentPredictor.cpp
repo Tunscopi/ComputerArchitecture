@@ -18,7 +18,7 @@ using namespace std;
 
 // Global variables
 // -------- CONTROL PARAMETERS (1) -----------
-const int entries = 1024, localHistoryDepth = 10, lastmBranchesUsed = 15, globPredwidth = 32768; 
+const int entries = 1024, localHistoryDepth = 10, lastmBranchesUsed = 2, globPredwidth = 4; 
 
 const int GHRsize = lastmBranchesUsed; 
 int GHR[GHRsize], pcLowerTenBits, globalIndex = 0, predictorArray[1][2], globPredArray[entries][globPredwidth], globPredStrengths[entries][globPredwidth]; // globPredArray: Used in nBitCounter, stores prediction and globPredStrengths stores corresponding pred_strength from each n-bit counter 
