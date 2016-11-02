@@ -50,7 +50,6 @@ int main() {
        GHR[i] = 0;
 
     for (int i=0; i<entries; i++) { 
-
         for (int j=0; j<globPredwidth; j++) {  
             globPredStrengths[i][j] = no_CounterBits; // Initialize prediction  strengths to strongly taken/strongly not taken
             globPredArray[i][j] = 0; // Initialize predictions to all Not taken
@@ -62,7 +61,7 @@ int main() {
            levelTwoStrengths[i][l] = no_CounterBits; 
         }
     }
-    predictorArray[0][0] = currPredictor; // Initialize selected predictor to 1 (Global Predictor)
+    predictorArray[0][0] = currPredictor; // Initialize selected predictor to currPredictor 
     predictorArray[0][1] = no_SaturatingCounterBits; // Initialize selected predictor strength to 2; i.e 2 misses before switch 
 
 
@@ -114,9 +113,11 @@ int localPred(int execution, int no_CounterBits) {
 
     // Compute local Pred Index
     localIndex = 0;
-    for (int i=localHistoryDepth-1; i>=0; i--) 
+    for (int i=localHistoryDepth-1; i>=0; i--){ 
         localIndex += levelOne[pcLowerTenBits][i]*pow(2,i); 
-
+    }
+    cout << localIndex << endl;
+    
     // Update levelTwoArray and levelTwoStrengths
     nBitCounter(no_CounterBits, execution, false);
 
