@@ -18,7 +18,7 @@ using namespace std;
 
 // Global variables
 // -------- CONTROL PARAMETERS (1) -----------
-const int entries = 1024, localHistoryDepth = 10, lastmBranchesUsed = 2, globPredwidth = 4; 
+const int entries = 1024, localHistoryDepth = 10, lastmBranchesUsed = 15, globPredwidth = 32768; 
 
 const int GHRsize = lastmBranchesUsed; 
 int GHR[GHRsize], pcLowerTenBits, globalIndex = 0, predictorArray[1][2], globPredArray[entries][globPredwidth], globPredStrengths[entries][globPredwidth]; // globPredArray: Used in nBitCounter, stores prediction and globPredStrengths stores corresponding pred_strength from each n-bit counter 
@@ -35,7 +35,7 @@ long long GetpcLowerTenBits(string);
 
 int main() {
     // -------- CONTROL PARAMETERS (2) ----------
-    int currPredictor = 2, no_CounterBits = 2, no_SaturatingCounterBits = 2; //Initial predictor (1 - Global Predictor), no_CounterBits- no. of wrong predictions before nbit counter/saturating counter switch
+    int currPredictor = 1, no_CounterBits = 2, no_SaturatingCounterBits = 2; //Initial predictor (1 - Global Predictor), no_CounterBits- no. of wrong predictions before nbit counter/saturating counter switch
 
     // Set-up variables
     int execution = 0;
@@ -43,7 +43,7 @@ int main() {
     bool tournament_prediction = 0, globalPrediction = 0, localPrediction = 0;  //where 0-Not Taken & 1-Taken
     string instr_info[4], pc, dummy; 
     ifstream reader;
-    reader.open("smalltrace.txt");     
+    reader.open("largetrace.txt");     
 
     // Initialize Data Arrays
     for (int i=0; i<GHRsize; i++)
@@ -102,23 +102,17 @@ int main() {
 }
 
 int localPred(int execution, int no_CounterBits) {
-    int localPrediction = levelTwo[pcLowerTenBits][localIndex];
-
-    for (int i=0; i<localHistoryDepth; i++)
-        cout << levelOne[pcLowerTenBits][i] << " ";
-    cout << "   " << localIndex << endl;
-
-    //Implement shift-left register to track last 10 executions of particular branch
-    for (int j=1; j<localHistoryDepth; j++) 
-        levelOne[pcLowerTenBits][j-1] = levelOne[pcLowerTenBits][j]; 
-    levelOne[pcLowerTenBits][localHistoryDepth-1] = execution; 
-    
-
     // Compute local Pred Index
     localIndex = 0;
     for (int i=localHistoryDepth-1; i>=0; i--) 
         localIndex += levelOne[pcLowerTenBits][i]*pow(2,localHistoryDepth-(i+1)); 
     
+    int localPrediction = levelTwo[pcLowerTenBits][localIndex];
+
+    //Implement shift-left register to track last 10 executions of particular branch
+    for (int j=1; j<localHistoryDepth; j++) 
+        levelOne[pcLowerTenBits][j-1] = levelOne[pcLowerTenBits][j]; 
+    levelOne[pcLowerTenBits][localHistoryDepth-1] = execution; 
     
     // Update levelTwoArray and levelTwoStrengths
     nBitCounter(no_CounterBits, execution, false);
@@ -153,6 +147,11 @@ void nBitCounter(int n, int execution, bool isGlobalPredictor) {
 }
 
 int globalPred(int execution, int no_CounterBits) { 
+       // Compute glob. Pred Index
+       globalIndex = 0;
+       for (int i=GHRsize-1; i>=0; i--) 
+           globalIndex += GHR[i]*pow(2,GHRsize-(i+1)); 
+
        // Access PHR (globPredArray), global prediction value
        int globalPrediction = globPredArray[pcLowerTenBits][globalIndex];
 
@@ -160,11 +159,6 @@ int globalPred(int execution, int no_CounterBits) {
        for (int j=1; j<GHRsize; j++) 
             GHR[j-1] = GHR[j]; 
        GHR[GHRsize-1] = execution; 
-
-       // Compute glob. Pred Index
-       globalIndex = 0;
-       for (int i=GHRsize-1; i>=0; i--) 
-           globalIndex += GHR[i]*pow(2,GHRsize-(i+1)); 
 
        // Update globPredArray by implementing n=2 bit counter
        nBitCounter(no_CounterBits, execution, true);

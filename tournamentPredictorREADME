@@ -9,18 +9,19 @@
 # B) Alternative Configurations yielding Improvement of prediction
 *Results are obtained testing code on large trace file
 
-Default parameters gave misprediction rate of 20.1428% 
+Default parameters gave misprediction rate of 2.90981% 
 
-1. Misprediction rate: 19.0364%
+1. Misprediction rate: 2.323% 
+   Parameters used: 
+        Using the last 15 branches for the global predictor and a 32768 (2^15) globalPredictor width, the misprediction rate improves.
+	
+
+   Reasoning: 
+       Improving the history of the global branch predictor increases branch accuracy, this implies there is a strong consistency in the eventual branch direction over a large number of previous branches. Hence, the trace could represent a program with a series of long predictable sequences as in a scientific calculation
+
+2. Misprediction rate: 2.83401% 
    Parameters used:
-	Using 1 branch for global predictor as opposed to last 2 branches. Hence, a (1,2) correlating predictor for the global predictor produced higher accuracy branch prediction over the (2,2) predictor. with all other default parameters fixed.
+	Using an n bit counter of 3 (n=3) i.e changing the selected predictor (saturating counter updates after 3 wrong predictions) and changing prediction (in both local & global predictors after 3 wrong predictions) with all other default parameters fixed.
 
-Reasoning: It is possible, in the trace program given, there was a strong link between successive branches that was even stronger than the connection between a branch and the previous 2 or more (looking at a global scale). Hence, the better branch prediction accuracy coming primarily from the global predictor.
-
-
-2. Misprediction rate: 15.9399% 
-   Parameters used:
-	Using an n bit counter of 1 i.e changing the selected predictor (saturating counter updates after 1 wrong prediction) and changing prediction (in both local & global predictors after 1 wrong prediction) with all other default parameters fixed.
-
-Reasoning: It is possible, in the trace program given, there was a quicker "recovery" of the predictors to the correct value. i.e they got to the right prediction after missing the previous. Also, this implies, there was a well defined branch direction. 
-This is because, the lower misprediction rate here suggests that, generally, a single wrong prediction was not a "fluke", but instead the execution was really flipping after a single misprediction. Hence, the 1 bit counter performed better branch prediction accuracy. 
+   REASONING: It is possible, in the trace program given, there was a slower "recovery" of the predictors to the correct/stable value. i.e they got to the right prediction after missing the previous. Also, this implies, there was a well defined branch direction. 
+This is because, the lower misprediction rate here suggests that, generally, a single or 2 wrong predictions was probably a "fluke", but instead the execution was flipping more deterministically after 2  mispredictions. Hence, the 3 bit-counter performed better branch prediction accuracy. 
